@@ -53,15 +53,15 @@ voices = [
         ]
 
 class KokoroEventHandler(AsyncEventHandler):
-    def __init__(self, wyoming_info: Info,
+    def __init__(self, wyoming_info: Info, pipeline,
         cli_args: argparse.Namespace,
         *args,
         **kwargs):
         super().__init__(*args, **kwargs)
         
+        self.pipeline = pipeline
         self.cli_args = cli_args
         self.args = args
-        #self.pipeline = KPipeline(lang_code='a')  # Initialize with English
         self.wyoming_info_event = wyoming_info.event()
 
     async def handle_event(self, event: Event) -> bool:
@@ -95,7 +95,7 @@ class KokoroEventHandler(AsyncEventHandler):
             print(synthesize)
             return true
             # Get voice settings
-            voice_name = "american-bella"  # default voice
+            voice_name = "af_heart"  # default voice
             if synthesize.voice:
                 voice_name = synthesize.voice.name
 
@@ -178,7 +178,7 @@ async def main():
 
     wyoming_info = Info(
             tts=[TtsProgram(
-                name="piper",
+                name="kokoro",
                 description="A fast, local, kokoro-based tts engine",
                 attribution=Attribution(
                     name="Kokoro TTS",
@@ -190,13 +190,15 @@ async def main():
             )]
         )
 
-    print(sorted(voices, key=lambda v: v.name))
+    #print(sorted(voices, key=lambda v: v.name))
+
+    pipeline = KPipeline(lang_code='a', device='cpu')  # Initialize with English
 
     server = AsyncServer.from_uri(args.uri)
 
 
     # Start server
-    await server.run(partial(KokoroEventHandler, wyoming_info, args))
+    await server.run(partial(KokoroEventHandler, wyoming_info, pipeline, args))
 
 if __name__ == "__main__":
     try:
