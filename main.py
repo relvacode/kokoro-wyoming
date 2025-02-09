@@ -97,7 +97,7 @@ class KokoroEventHandler(AsyncEventHandler):
             generator = self.pipeline(
                 synthesize.text,
                 voice=voice_name,
-                speed=1, split_pattern=r'\n+'
+                speed=1, split_pattern=r'(?<=[.!?])\s+'
             )
 
             # Send audio start
@@ -181,7 +181,7 @@ async def main():
             )]
         )
 
-    pipeline = KPipeline(lang_code='a', device='cpu')  # Initialize with English
+    pipeline = KPipeline(lang_code='a')  # Initialize with English
 
     server = AsyncServer.from_uri(args.uri)
 
