@@ -15,9 +15,38 @@ from wyoming.server import AsyncServer
 from wyoming.tts import Synthesize, SynthesizeVoice
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.event import Event
+import re
+
 
 _LOGGER = logging.getLogger(__name__)
 VERSION = "0.1"
+
+def split_into_sentences(text: str) -> list[str]:
+    """
+    Split text into sentences using punctuation boundaries.
+    
+    Args:
+        text: Input text to split
+        
+    Returns:
+        List of sentences
+        
+    Example:
+        >>> text = "Hello world! How are you? I'm doing great."
+        >>> split_into_sentences(text)
+        ['Hello world!', 'How are you?', "I'm doing great."]
+    """
+    # First normalize whitespace and clean the text
+    text = ' '.join(text.strip().split())
+    
+    # Split on sentence boundaries
+    pattern = r'(?<=[.!?])\s+'
+    sentences = re.split(pattern, text)
+    
+    # Filter out empty strings and strip whitespace
+    sentences = [s.strip() for s in sentences if s.strip()]
+    
+    return sentences
 
 @dataclass
 class KokoroVoice:
@@ -93,38 +122,49 @@ class KokoroEventHandler(AsyncEventHandler):
             if synthesize.voice:
                 voice_name = synthesize.voice.name
 
-            # Generate audio
-            generator = self.pipeline(
-                synthesize.text,
-                voice=voice_name,
-                speed=1, split_pattern=r'(?<=[.!?])\s+'
-            )
+            sentences = split_into_sentences(synthesize.text)
 
-            # Send audio start
-            await self.write_event(
-                AudioStart(
-                    rate=24000,
-                    width=2,
-                    channels=1,
-                ).event()
-            )
+            i = 0
 
-            # Process each chunk
-            for _, _, audio in generator:
-                # Convert float32 to int16
-                audio_numpy = audio.cpu().numpy()  # Move to CPU if it's on GPU
-                audio_int16 = (audio_numpy * 32767).astype(np.int16)
-                audio_bytes = audio_int16.tobytes()
+            for sentence in sentences:
                 
-                # Send audio chunk
-                await self.write_event(
-                    AudioChunk(
-                        audio=audio_bytes,
-                        rate=24000,
-                        width=2,
-                        channels=1,
-                    ).event()
+                # Generate audio
+                generator = self.pipeline(
+                    sentence,
+                    voice=voice_name,
+                    speed=1, split_pattern=r'(?<=[.!?])\s+'
                 )
+
+                
+
+                if i == 0:
+                    # Send audio start
+                    await self.write_event(
+                        AudioStart(
+                            rate=24000,
+                            width=2,
+                            channels=1,
+                        ).event()
+                    )
+                    i += 1
+
+                # Process each chunk
+                for _, _, audio in generator:
+
+                    # Convert float32 to int16
+                    audio_numpy = audio.cpu().numpy()  # Move to CPU if it's on GPU
+                    audio_int16 = (audio_numpy * 32767).astype(np.int16)
+                    audio_bytes = audio_int16.tobytes()
+                    
+                    # Send audio chunk
+                    await self.write_event(
+                        AudioChunk(
+                            audio=audio_bytes,
+                            rate=24000,
+                            width=2,
+                            channels=1,
+                        ).event()
+                    )
 
             # Send audio stop
             await self.write_event(
