@@ -131,7 +131,7 @@ class KokoroEventHandler(AsyncEventHandler):
                     sentence,
                     voice=voice_name,
                     speed=1.0,
-                    lang="en-gb"
+                    lang="en-us" if voice_name.startswith("a") else "en-gb"
                 )
 
                 if i == 0:
