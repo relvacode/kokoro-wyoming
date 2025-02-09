@@ -1,0 +1,13 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+.env
+*.wav
+.pytest_cache/
+.coverage
+htmlcov/
+.idea/
+.vscode/

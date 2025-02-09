@@ -1,5 +1,7 @@
 FROM python:3.12-slim
-ADD main.py .
-ADD requirements.txt .
+WORKDIR /app
+COPY requirements.txt .
 RUN pip install -r requirements.txt
-CMD ["python", "./main.py"]
+COPY src/ /app/src/
+ENV PYTHONPATH=/app
+CMD ["python", "src/main.py"]
