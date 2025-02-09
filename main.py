@@ -27,11 +27,8 @@ class KokoroVoice:
 
 # Define available voices
 VOICES = [
-    "af_heart", "af_bella", "af_sarah", "am_adam", "am_michael"
-            #"af_bella", "af_nicole", "af_sarah", "af_sky",
-            #"am_adam", "am_michael",
-            #"bf_emma", "bf_isabella",
-            #"bm_george", "bm_lewis"
+    "af_heart", "af_bella", "af_sarah", "am_adam", "am_michael",
+    "if_sara","im_nicola"
         ]
 
 voices = [
@@ -44,7 +41,9 @@ voices = [
                 installed=True,
                 version=None,
                 languages=[
-                    "en"
+                    "en" if voice_id.startswith("a") else 
+                    "it" if voice_id.startswith("i") else 
+                    "hi" if voice_id.startswith("h") else "en"
                 ],
                 speakers=[
                     TtsVoiceSpeaker(name=voice_id.split("_")[1])
@@ -70,15 +69,12 @@ class KokoroEventHandler(AsyncEventHandler):
         if Describe.is_type(event.type):
             await self.write_event(self.wyoming_info_event)
             _LOGGER.debug("Sent info")
-            print("Sent info")
             return True
 
         if not Synthesize.is_type(event.type):
             _LOGGER.warning("Unexpected event: %s", event)
-            print("Unexpected event: %s", event)
             return True
 
-        print("Got other event")
         try:
             return await self._handle_synthesize(event)
         except Exception as err:
@@ -92,8 +88,6 @@ class KokoroEventHandler(AsyncEventHandler):
         try:
             synthesize = Synthesize.from_event(event)
 
-            print("Got synthesize event!")
-            print(synthesize)
             # Get voice settings
             voice_name = "af_heart"  # default voice
             if synthesize.voice:
