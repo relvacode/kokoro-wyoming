@@ -2,12 +2,11 @@
 import argparse
 import asyncio
 import logging
-import json
 from dataclasses import dataclass
 from typing import Optional
 from functools import partial
 from wyoming.server import AsyncEventHandler
-from kokoro import KPipeline
+from kokoro_onnx import Kokoro
 import numpy as np
 
 from wyoming.info import Attribution, Info, TtsProgram, TtsVoice, TtsVoiceSpeaker, Describe, Info
@@ -82,13 +81,13 @@ voices = [
         ]
 
 class KokoroEventHandler(AsyncEventHandler):
-    def __init__(self, wyoming_info: Info, pipeline,
+    def __init__(self, wyoming_info: Info, kokoro_instance,
         cli_args: argparse.Namespace,
         *args,
         **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.pipeline = pipeline
+        self.kokoro = kokoro_instance
         self.cli_args = cli_args
         self.args = args
         self.wyoming_info_event = wyoming_info.event()
@@ -127,15 +126,13 @@ class KokoroEventHandler(AsyncEventHandler):
             i = 0
 
             for sentence in sentences:
-                
-                # Generate audio
-                generator = self.pipeline(
+                # Create audio stream
+                stream = self.kokoro.create_stream(
                     sentence,
                     voice=voice_name,
-                    speed=1, split_pattern=r'(?<=[.!?])\s+'
+                    speed=1.0,
+                    lang="en-gb"
                 )
-
-                
 
                 if i == 0:
                     # Send audio start
@@ -148,12 +145,10 @@ class KokoroEventHandler(AsyncEventHandler):
                     )
                     i += 1
 
-                # Process each chunk
-                for _, _, audio in generator:
-
+                # Process each chunk from the stream
+                async for audio, sample_rate in stream:
                     # Convert float32 to int16
-                    audio_numpy = audio.cpu().numpy()  # Move to CPU if it's on GPU
-                    audio_int16 = (audio_numpy * 32767).astype(np.int16)
+                    audio_int16 = (audio * 32767).astype(np.int16)
                     audio_bytes = audio_int16.tobytes()
                     
                     # Send audio chunk
@@ -221,13 +216,13 @@ async def main():
             )]
         )
 
-    pipeline = KPipeline(lang_code='a')  # Initialize with English
+    # Initialize Kokoro instead of KPipeline
+    kokoro_instance = Kokoro("kokoro-v1.0.onnx", "voices.json")
 
     server = AsyncServer.from_uri(args.uri)
 
-
-    # Start server
-    await server.run(partial(KokoroEventHandler, wyoming_info, pipeline, args))
+    # Start server with kokoro instance
+    await server.run(partial(KokoroEventHandler, wyoming_info, kokoro_instance, args))
 
 if __name__ == "__main__":
     try:

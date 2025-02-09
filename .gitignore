@@ -33,3 +33,7 @@ ENV/
 
 # Project specific
 *.wav
+
+*.bin
+*.json
+*.onnx
