@@ -58,22 +58,26 @@ class KokoroEventHandler(AsyncEventHandler):
         *args,
         **kwargs):
         super().__init__(*args, **kwargs)
-        self.wyoming_info = wyoming_info
+        
+        self.cli_args = cli_args
         self.args = args
         self.pipeline = KPipeline(lang_code='a')  # Initialize with English
         self.wyoming_info_event = wyoming_info.event()
 
-    async def handle_event(self, event: Event):
+    async def handle_event(self, event: Event) -> bool:
         """Handle Wyoming protocol events."""
         if Describe.is_type(event.type):
             await self.write_event(self.wyoming_info_event)
             _LOGGER.debug("Sent info")
+            print("Sent info")
             return True
 
         if not Synthesize.is_type(event.type):
             _LOGGER.warning("Unexpected event: %s", event)
+            print("Unexpected event: %s", event)
             return True
 
+        print("Got other event")
         try:
             return await self._handle_synthesize(event)
         except Exception as err:
@@ -104,7 +108,7 @@ class KokoroEventHandler(AsyncEventHandler):
             await client_writer.wait_closed()
 
     """Handle text to speech synthesis request."""
-    async def _handle_synthesize(self, event: Event): 
+    async def _handle_synthesize(self, event: Event) -> bool: 
         try:
             synthesize = Synthesize.from_event(event)
 
@@ -194,7 +198,7 @@ async def main():
 
     wyoming_info = Info(
             tts=[TtsProgram(
-                name="kokoro",
+                name="piper",
                 description="A fast, local, kokoro-based tts engine",
                 attribution=Attribution(
                     name="Kokoro TTS",
@@ -202,11 +206,14 @@ async def main():
                 ),
                 installed=True,
                 voices=sorted(voices, key=lambda v: v.name),
-                version=VERSION
+                version="1.5.0"
             )]
         )
 
+    print(sorted(voices, key=lambda v: v.name))
+
     server = AsyncServer.from_uri(args.uri)
+
 
     # Start server
     await server.run(partial(KokoroEventHandler, wyoming_info, args))
