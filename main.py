@@ -27,10 +27,11 @@ class KokoroVoice:
 
 # Define available voices
 VOICES = [
-            "af_bella", "af_nicole", "af_sarah", "af_sky",
-            "am_adam", "am_michael",
-            "bf_emma", "bf_isabella",
-            "bm_george", "bm_lewis"
+    "af_heart"
+            #"af_bella", "af_nicole", "af_sarah", "af_sky",
+            #"am_adam", "am_michael",
+            #"bf_emma", "bf_isabella",
+            #"bm_george", "bm_lewis"
         ]
 
 voices = [
@@ -38,12 +39,12 @@ voices = [
                 name=voice_id,
                 description=f"Kokoro voice {voice_id}",
                 attribution=Attribution(
-                    name="Kokoro", url="https://github.com/CjangCjengh/kokoro"
+                    name="", url=""
                 ),
                 installed=True,
                 version=None,
                 languages=[
-                    voice_id.split("_")[0]
+                    "en"
                 ],
                 speakers=[
                     TtsVoiceSpeaker(name=voice_id.split("_")[1])
@@ -93,53 +94,53 @@ class KokoroEventHandler(AsyncEventHandler):
 
             print("Got synthesize event!")
             print(synthesize)
-            return true
             # Get voice settings
             voice_name = "af_heart"  # default voice
             if synthesize.voice:
                 voice_name = synthesize.voice.name
 
             # Find matching voice
-            voice = next((v for v in VOICES if v == voice_name), VOICES[0])
+            #voice = next((v for v in VOICES if v == voice_name), VOICES[0])
+            print(voice_name)
 
             # Generate audio
             generator = self.pipeline(
                 synthesize.text,
-                voice=voice.kokoro_id,
+                voice=voice_name,
                 speed=1
             )
 
             # Send audio start
-            await AsyncServer.write_event(
+            await self.write_event(
                 AudioStart(
                     rate=24000,
                     width=2,
                     channels=1,
-                ),
-                client_writer,
+                ).event()
             )
 
             # Process each chunk
             for _, _, audio in generator:
                 # Convert float32 to int16
-                audio_int16 = (audio * 32767).astype(np.int16)
+                audio_numpy = audio.cpu().numpy()  # Move to CPU if it's on GPU
+                audio_int16 = (audio_numpy * 32767).astype(np.int16)
+                audio_bytes = audio_int16.tobytes()
                 
                 # Send audio chunk
-                await AsyncServer.write_event(
+                await self.write_event(
                     AudioChunk(
-                        audio=audio_int16.tobytes(),
+                        audio=audio_bytes,
                         rate=24000,
                         width=2,
                         channels=1,
-                    ),
-                    client_writer,
+                    ).event()
                 )
 
             # Send audio stop
-            await AsyncServer.write_event(
-                AudioStop(),
-                client_writer,
-            )
+            await self.write_event(
+                AudioStop().event())
+
+            return True
 
         except Exception as e:
             _LOGGER.exception("Error synthesizing: %s", e)
@@ -190,7 +191,7 @@ async def main():
             )]
         )
 
-    #print(sorted(voices, key=lambda v: v.name))
+    print(sorted(voices, key=lambda v: v.name)[0])
 
     pipeline = KPipeline(lang_code='a', device='cpu')  # Initialize with English
 
