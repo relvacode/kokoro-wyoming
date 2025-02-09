@@ -93,10 +93,6 @@ class KokoroEventHandler(AsyncEventHandler):
             if synthesize.voice:
                 voice_name = synthesize.voice.name
 
-            # Find matching voice
-            #voice = next((v for v in VOICES if v == voice_name), VOICES[0])
-            print(voice_name)
-
             # Generate audio
             generator = self.pipeline(
                 synthesize.text,
@@ -184,8 +180,6 @@ async def main():
                 version="1.5.0"
             )]
         )
-
-    print(sorted(voices, key=lambda v: v.name)[0])
 
     pipeline = KPipeline(lang_code='a', device='cpu')  # Initialize with English
 
