@@ -56,8 +56,8 @@ class KokoroVoice:
 
 # Define available voices
 VOICES = [
-    "af_heart", "af_bella", "af_sarah", "am_adam", "am_michael",
-    "if_sara","im_nicola"
+    "af_heart", "af_bella", "af_nicole", "af_sarah", "am_fenrir", "am_adam", "am_michael","am_puck",
+    "bf_emma","bf_isabella", "bm_fable","bm_george"
         ]
 
 voices = [
