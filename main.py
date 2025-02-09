@@ -61,7 +61,7 @@ class KokoroEventHandler(AsyncEventHandler):
         
         self.cli_args = cli_args
         self.args = args
-        self.pipeline = KPipeline(lang_code='a')  # Initialize with English
+        #self.pipeline = KPipeline(lang_code='a')  # Initialize with English
         self.wyoming_info_event = wyoming_info.event()
 
     async def handle_event(self, event: Event) -> bool:
@@ -86,27 +86,6 @@ class KokoroEventHandler(AsyncEventHandler):
             )
             raise err
 
-    async def handle_client(
-        self, 
-        client_reader: asyncio.StreamReader, 
-        client_writer: asyncio.StreamWriter
-    ):
-        try:
-            while True:
-                event = await AsyncServer.read_event(client_reader)
-                if event is None:
-                    break
-
-                if isinstance(event, Synthesize):
-                    await self._handle_synthesize(event, client_writer)
-                    break
-
-        except Exception as e:
-            _LOGGER.exception("Error handling client: %s", e)
-        finally:
-            client_writer.close()
-            await client_writer.wait_closed()
-
     """Handle text to speech synthesis request."""
     async def _handle_synthesize(self, event: Event) -> bool: 
         try:
@@ -114,6 +93,7 @@ class KokoroEventHandler(AsyncEventHandler):
 
             print("Got synthesize event!")
             print(synthesize)
+            return true
             # Get voice settings
             voice_name = "american-bella"  # default voice
             if synthesize.voice:
