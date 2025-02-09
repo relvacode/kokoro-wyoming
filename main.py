@@ -107,7 +107,7 @@ class KokoroEventHandler(AsyncEventHandler):
             generator = self.pipeline(
                 synthesize.text,
                 voice=voice_name,
-                speed=1
+                speed=1, split_pattern=r'\n+'
             )
 
             # Send audio start
