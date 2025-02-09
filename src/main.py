@@ -217,7 +217,7 @@ async def main():
         )
 
     # Initialize Kokoro instead of KPipeline
-    kokoro_instance = Kokoro("kokoro-v1.0.onnx", "voices.json")
+    kokoro_instance = Kokoro("kokoro-v0_19.onnx", "voices.json")
 
     server = AsyncServer.from_uri(args.uri)
 
