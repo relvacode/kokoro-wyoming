@@ -10,6 +10,7 @@ import kokoro_onnx.config
 from wyoming.error import Error
 from wyoming.server import AsyncEventHandler
 from kokoro_onnx import Kokoro
+from kokoro_onnx.log import log
 import numpy as np
 
 from wyoming.info import Attribution, TtsProgram, TtsVoice, TtsVoiceSpeaker, Describe, Info
@@ -19,7 +20,7 @@ from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.event import Event
 import re
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = log.getChild(__name__)
 VERSION = "0.1"
 
 
@@ -80,13 +81,11 @@ def get_model_voices(model: Kokoro) -> list[TtsVoice]:
 
 class KokoroEventHandler(AsyncEventHandler):
     def __init__(self, wyoming_info: Info, kokoro_instance,
-                 cli_args: argparse.Namespace,
                  *args,
                  **kwargs):
         super().__init__(*args, **kwargs)
 
         self.kokoro = kokoro_instance
-        self.cli_args = cli_args
         self.args = args
         self.wyoming_info_event = wyoming_info.event()
 
@@ -200,13 +199,8 @@ async def main():
     )
     args = parser.parse_args()
 
-    logging.basicConfig(
-        level=logging.DEBUG if args.debug else logging.INFO,
-        format="%(asctime)s %(levelname)s: %(message)s",
-    )
-
     if args.debug:
-        logging.getLogger(kokoro_onnx.__name__).setLevel("DEBUG")
+        log.setLevel(level=logging.DEBUG)
 
     kokoro_instance = Kokoro("kokoro-v1.0.onnx", "voices-v1.0.bin")
     wyoming_voices = get_model_voices(kokoro_instance)
@@ -225,6 +219,7 @@ async def main():
         )]
     )
 
+    _LOGGER.info('Kokoro Onyx server starting on %s', args.uri)
     server = AsyncServer.from_uri(args.uri)
 
     # Handle OS signals
@@ -233,7 +228,7 @@ async def main():
         loop.add_signal_handler(s, lambda: asyncio.create_task(server.stop()))
 
     # Start server with kokoro instance
-    await server.run(partial(KokoroEventHandler, wyoming_info, kokoro_instance, args))
+    await server.run(partial(KokoroEventHandler, wyoming_info, kokoro_instance))
 
 
 if __name__ == "__main__":
