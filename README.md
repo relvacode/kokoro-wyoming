@@ -19,3 +19,7 @@ docker pull ghcr.io/relvacode/kokoro-wyoming:latest
 Use one of the provided docker compose files in this repository (use Intel if you have a recent Intel iGPU).
 
 Then go to Home Assistant -> Device & Services -> Add Integration -> Wyoming Protocol. Then, punch in the IP address of where the container is running, and the port (10210) by default.
+
+Once setup, you can use `Kokoro` as an assistant TTS provider by going to Home Assistant -> Voice assistants and either edit or create an assistant, then select `Kokoro` as the Text-to-speech provider.
+
+Options for available voices can be found in the [model voices documentation](https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md).
