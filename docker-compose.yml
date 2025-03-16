@@ -4,5 +4,3 @@ services:
     ports:
       - "10210:10210"
     restart: unless-stopped
-    tty: true
-    stdin_open: true

@@ -7,5 +7,5 @@ Modified from [nordwestt/kokoro-wyoming](https://github.com/nordwestt/kokoro-wyo
   - Updated to latest Kokoro model
   - Available voices are read directly from the model instead of hardcoding
   - Support for `SIGINT` and `SIGTERM` termination
-  - Install GPU support
+  - Support for GPU accelerated inference (see [./docker-compose.intel.yml]())
   - Kokoro debug logging
