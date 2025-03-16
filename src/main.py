@@ -123,7 +123,7 @@ class KokoroEventHandler(AsyncEventHandler):
             sentences = split_into_sentences(synthesize.text)
 
             i = 0
-
+            t_bytes = 0
             for sentence in sentences:
                 # Create audio stream
                 stream = self.kokoro.create_stream(
@@ -137,7 +137,7 @@ class KokoroEventHandler(AsyncEventHandler):
                     # Send audio start
                     await self.write_event(
                         AudioStart(
-                            rate=24000,
+                            rate=kokoro_onnx.config.SAMPLE_RATE,
                             width=2,
                             channels=1,
                         ).event()
@@ -149,6 +149,8 @@ class KokoroEventHandler(AsyncEventHandler):
                     # Convert float32 to int16
                     audio_int16 = (audio * 32767).astype(np.int16)
                     audio_bytes = audio_int16.tobytes()
+
+                    t_bytes += len(audio_bytes)
 
                     # Send audio chunk
                     await self.write_event(
@@ -163,6 +165,8 @@ class KokoroEventHandler(AsyncEventHandler):
             # Send audio stop
             await self.write_event(
                 AudioStop().event())
+
+            _LOGGER.debug('Synthesized %d bytes from %s', t_bytes, repr(synthesize))
 
             return True
 
@@ -200,6 +204,9 @@ async def main():
         level=logging.DEBUG if args.debug else logging.INFO,
         format="%(asctime)s %(levelname)s: %(message)s",
     )
+
+    if args.debug:
+        logging.getLogger(kokoro_onnx.__name__).setLevel("DEBUG")
 
     kokoro_instance = Kokoro("kokoro-v1.0.onnx", "voices-v1.0.bin")
     wyoming_voices = get_model_voices(kokoro_instance)
