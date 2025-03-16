@@ -1,17 +1,16 @@
 FROM python:3.12-slim
-WORKDIR /app
-
-# Install curl
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+ENV PYTHONPATH=/app
+WORKDIR /app/src
 
 # Install required packages
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Download required model files
-RUN mkdir -p /app/src && curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/voices.json" -o /app/src/voices.json && \
-    curl -L "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/kokoro-v0_19.onnx" -o /app/src/kokoro-v0_19.onnx
+RUN mkdir -p /app/src
+ADD https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx /app/src/kokoro-v1.0.onnx
+ADD https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin /app/src/voices-v1.0.bin
+
 COPY src/ /app/src/
-ENV PYTHONPATH=/app
-WORKDIR /app/src
-CMD ["python", "main.py"]
+
+ENTRYPOINT ["/usr/local/bin/python3", "main.py"]
