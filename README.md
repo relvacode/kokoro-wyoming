@@ -2,7 +2,7 @@
 
 This a [wyoming protocol](https://github.com/rhasspy/wyoming) server that implements [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M) using the [Kokoro onnx](https://github.com/thewh1teagle/kokoro-onnx) python library.
 
-Modified from [nordwestt/kokoro-wyoming](https://github.com/nordwestt/kokoro-wyoming) with some significant improvements
+Recent significant improvements from relvacode:
 
   - Updated to latest Kokoro model
   - Available voices are read directly from the model instead of hardcoding
@@ -10,6 +10,10 @@ Modified from [nordwestt/kokoro-wyoming](https://github.com/nordwestt/kokoro-wyo
   - Support for GPU accelerated inference (see [./docker-compose.intel.yml]())
   - Kokoro debug logging
 
+Docker image avaiable at:
+https://hub.docker.com/r/nordwestt/kokoro-wyoming 
+
+Latest improvements available at:
 ```
 docker pull ghcr.io/relvacode/kokoro-wyoming:latest
 ```
